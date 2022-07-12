@@ -20,8 +20,14 @@ def valid_groups(groups):
             combined_group.extend(group)
         else:
             sub_groups.append(group)
-    sub_groups.append(combined_group)
-    return sub_groups
+    if len(combined_group) == 0:
+        return sub_groups
+    elif len(combined_group) == 1:
+        sub_groups[0].extend(combined_group)
+        return sub_groups
+    else:
+        sub_groups.append(combined_group)
+        return sub_groups
 
 
 if __name__ == "__main__":
@@ -32,7 +38,7 @@ if __name__ == "__main__":
     bench = Benchmark()
     func_num = 1
     NIND = 30
-    FEs = 3000000
+    FEs = 600000
     func = bench.get_function(func_num)
     info = bench.get_info(func_num)
     var_range = [info["lower"], info["upper"]]
@@ -44,26 +50,30 @@ if __name__ == "__main__":
     G_obj_path = path.dirname(this_path) + "/Data/obj/G/f" + str(func_num)
     GA_obj_path = path.dirname(this_path) + "/Data/obj/proposal/f" + str(func_num)
 
-    for i in range(trial_run):
-        print("trial run: ", i)
-        CCVIL_groups, CCVIL_cost = CCVIl(Dim, func)
-        D_groups = DECC_D(Dim, func, var_range, groups_num=20, max_number=50)
-        DG_groups, DG_cost = DECC_DG(Dim, func)
-        G_groups = DECC_G(Dim, groups_num=20, max_number=50)
-
-        CCVIL_Max_iter = int((FEs - CCVIL_cost) / NIND / Dim) - 10
-        CCVIL_obj_trace = CC_CMAES(Dim, CCVIL_groups, NIND, CCVIL_Max_iter, func, var_range)
-        write_obj(CCVIL_obj_trace, CCVIL_obj_path)
-
-        D_Max_iter = int((FEs - 30000) / NIND / Dim) - 10
-        D_obj_trace = CC_CMAES(Dim, D_groups, NIND, D_Max_iter, func, var_range)
-        write_obj(D_obj_trace, D_obj_path)
-
-        DG_Max_iter = int((FEs - DG_cost) / NIND / Dim) - 10
-        DG_obj_trace = CC_CMAES(Dim, DG_groups, NIND, DG_Max_iter, func, var_range)
-        write_obj(DG_obj_trace, DG_obj_path)
-
-        G_Max_iter = int(FEs / NIND / Dim) - 10
-        G_obj_trace = CC_CMAES(Dim, G_groups, NIND, G_Max_iter, func, var_range)
-        write_obj(G_obj_trace, G_obj_path)
+    DG_groups, DG_cost = DECC_DG(Dim, func)
+    DG_groups = valid_groups(DG_groups)
+    CCVIL_groups, CCVIL_cost = CCVIl(Dim, func)
+    print("before: ", len(CCVIL_groups), CCVIL_groups)
+    CCVIL_groups = valid_groups(CCVIL_groups)
+    print("after: ", len(CCVIL_groups), CCVIL_groups)
+    # for i in range(trial_run):
+    #     print("trial run: ", i)
+    #     D_groups = DECC_D(Dim, func, var_range, groups_num=20, max_number=50)
+    #     G_groups = DECC_G(Dim, groups_num=20, max_number=50)
+    #
+    #     CCVIL_Max_iter = int((FEs - CCVIL_cost) / NIND / Dim) - 10
+    #     CCVIL_obj_trace = CC_CMAES(Dim, CCVIL_groups, NIND, CCVIL_Max_iter, func, var_range)
+    #     write_obj(CCVIL_obj_trace, CCVIL_obj_path)
+    #
+    #     D_Max_iter = int((FEs - 30000) / NIND / Dim) - 10
+    #     D_obj_trace = CC_CMAES(Dim, D_groups, NIND, D_Max_iter, func, var_range)
+    #     write_obj(D_obj_trace, D_obj_path)
+    #
+    #     DG_Max_iter = int((FEs - DG_cost) / NIND / Dim) - 10
+    #     DG_obj_trace = CC_CMAES(Dim, DG_groups, NIND, DG_Max_iter, func, var_range)
+    #     write_obj(DG_obj_trace, DG_obj_path)
+    #
+    #     G_Max_iter = int(FEs / NIND / Dim) - 10
+    #     G_obj_trace = CC_CMAES(Dim, G_groups, NIND, G_Max_iter, func, var_range)
+    #     write_obj(G_obj_trace, G_obj_path)
 
